@@ -269,6 +269,14 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 			boolean typeCheckOnly) throws BeansException {
 
 		//FIXME 粗理解 验证bean的名字是否合法
+		/**
+		 * 通过那么获取beanName。这里不适用name直接作为beanName有两个原因
+		 * 1、name可能会以&符开头，表明调用者想获取FactoryBean本身，而非FactoryBean
+		 * 实现类所创建的bean。在BeanFactory中FactoryBean的实现类和其他的bean存储方式是一直的
+		 * 即：<beanName,bean>,beanName中是没有&这个符号的，所以我们需要将name的首字符&移除，
+		 * 这样才能从缓存里取到FactoryBean实例。
+		 * 2、还是别名问题，需要转换
+		 */
 		String beanName = transformedBeanName(name);
 		Object bean;
 
@@ -372,8 +380,9 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 		 * 这个方法的存在至关重要
 		 * 最后说明一下getSingleton(beanName)的源码分析，下文会分析
 		 */
-		//从单例池（list）中用beanName拿 看有没有实例化
+		// 从单例池（list）中用beanName拿 看有没有实例化
 		Object sharedInstance = getSingleton(beanName);
+		// 如果sharedInstance不等于空值 直接返回
 		if (sharedInstance != null && args == null) {
 			if (logger.isTraceEnabled()) {
 				if (isSingletonCurrentlyInCreation(beanName)) {
@@ -390,7 +399,7 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 			 * 什么时候不等于空呢？
 			 * 在容器初始化完成之后，程序员直接调用getBean的时候不等于空
 			 * 什么时候等于空呢？
-			 *创建对象的时候调用就等于空
+			 * 创建对象的时候调用就等于空
 			 */
 			bean = getObjectForBeanInstance(sharedInstance, name, beanName, null);
 		}
@@ -1147,14 +1156,20 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 		return getMergedLocalBeanDefinition(beanName);
 	}
 
+	/**
+	 * 根据名字判断是否是FactoryBean
+	 */
 	@Override
 	public boolean isFactoryBean(String name) throws NoSuchBeanDefinitionException {
+		//获取转换后的名字
 		String beanName = transformedBeanName(name);
 		Object beanInstance = getSingleton(beanName, false);
 		if (beanInstance != null) {
+			//如果已经是单例了，就判断是否是FactoryBean类型
 			return (beanInstance instanceof FactoryBean);
 		}
 		// No singleton instance found -> check bean definition.
+		// 没有单例，看是否有bean定义，没有就看父类bean工厂
 		if (!containsBeanDefinition(beanName) && getParentBeanFactory() instanceof ConfigurableBeanFactory) {
 			// No bean definition found in this factory -> delegate to parent.
 			return ((ConfigurableBeanFactory) getParentBeanFactory()).isFactoryBean(name);

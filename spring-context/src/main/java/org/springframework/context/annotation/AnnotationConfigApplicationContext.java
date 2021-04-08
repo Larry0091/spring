@@ -97,6 +97,7 @@ public class AnnotationConfigApplicationContext extends GenericApplicationContex
 		//设置是否允许循环依赖
 //		setAllowCircularReferences(false);
 
+		// 完成spring默认的7个beanDefaultMap的写入
 		register(componentClasses);
 		refresh();
 	}

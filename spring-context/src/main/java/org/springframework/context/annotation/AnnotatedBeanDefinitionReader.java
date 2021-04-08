@@ -35,16 +35,14 @@ import org.springframework.util.Assert;
 
 /**
  * Convenient adapter for programmatic registration of bean classes.
- *
  * <p>This is an alternative to {@link ClassPathBeanDefinitionScanner}, applying
  * the same resolution of annotations but for explicitly registered classes only.
- *
  * @author Juergen Hoeller
  * @author Chris Beams
  * @author Sam Brannen
  * @author Phillip Webb
- * @since 3.0
  * @see AnnotationConfigApplicationContext#register
+ * @since 3.0
  */
 public class AnnotatedBeanDefinitionReader {
 
@@ -55,7 +53,6 @@ public class AnnotatedBeanDefinitionReader {
 	private ScopeMetadataResolver scopeMetadataResolver = new AnnotationScopeMetadataResolver();
 
 	private ConditionEvaluator conditionEvaluator;
-
 
 	/**
 	 * Create a new {@code AnnotatedBeanDefinitionReader} for the given registry.
@@ -84,16 +81,15 @@ public class AnnotatedBeanDefinitionReader {
 		Assert.notNull(registry, "BeanDefinitionRegistry must not be null");
 		Assert.notNull(environment, "Environment must not be null");
 		this.registry = registry;
-		this.conditionEvaluator = new ConditionEvaluator(registry, environment, null);
+		conditionEvaluator = new ConditionEvaluator(registry, environment, null);
 		AnnotationConfigUtils.registerAnnotationConfigProcessors(this.registry);
 	}
-
 
 	/**
 	 * Get the BeanDefinitionRegistry that this reader operates on.
 	 */
 	public final BeanDefinitionRegistry getRegistry() {
-		return this.registry;
+		return registry;
 	}
 
 	/**
@@ -103,7 +99,7 @@ public class AnnotatedBeanDefinitionReader {
 	 * @see #registerBean(Class, String, Class...)
 	 */
 	public void setEnvironment(Environment environment) {
-		this.conditionEvaluator = new ConditionEvaluator(this.registry, environment, null);
+		conditionEvaluator = new ConditionEvaluator(registry, environment, null);
 	}
 
 	/**
@@ -119,10 +115,10 @@ public class AnnotatedBeanDefinitionReader {
 	 * <p>The default is an {@link AnnotationScopeMetadataResolver}.
 	 */
 	public void setScopeMetadataResolver(@Nullable ScopeMetadataResolver scopeMetadataResolver) {
-		this.scopeMetadataResolver =
-				(scopeMetadataResolver != null ? scopeMetadataResolver : new AnnotationScopeMetadataResolver());
+		this.scopeMetadataResolver = (scopeMetadataResolver != null ?
+				scopeMetadataResolver :
+				new AnnotationScopeMetadataResolver());
 	}
-
 
 	/**
 	 * Register one or more component classes to be processed.
@@ -180,7 +176,6 @@ public class AnnotatedBeanDefinitionReader {
 	 * @param qualifiers specific qualifier annotations to consider,
 	 * in addition to qualifiers at the bean class level
 	 */
-	@SuppressWarnings("unchecked")
 	public void registerBean(Class<?> beanClass, Class<? extends Annotation>... qualifiers) {
 		doRegisterBean(beanClass, null, null, qualifiers);
 	}
@@ -193,7 +188,6 @@ public class AnnotatedBeanDefinitionReader {
 	 * @param qualifiers specific qualifier annotations to consider,
 	 * in addition to qualifiers at the bean class level
 	 */
-	@SuppressWarnings("unchecked")
 	public void registerBean(Class<?> beanClass, String name, Class<? extends Annotation>... qualifiers) {
 		doRegisterBean(beanClass, null, name, qualifiers);
 	}
@@ -214,26 +208,55 @@ public class AnnotatedBeanDefinitionReader {
 	<T> void doRegisterBean(Class<T> beanClass, @Nullable Supplier<T> instanceSupplier, @Nullable String name,
 			@Nullable Class<? extends Annotation>[] qualifiers, BeanDefinitionCustomizer... definitionCustomizers) {
 
+		/**
+		 * 根据指定的bean创建一个AnnotatedGenericBeanDefinition
+		 * 这个AnnotatedGenericBeanDefinition可以理解为一个数据结构
+		 * AnnotatedGenericBeanDefinition包含了类的其他信息，比如一些元信息 scope，lazy等
+		 */
 		AnnotatedGenericBeanDefinition abd = new AnnotatedGenericBeanDefinition(beanClass);
-		if (this.conditionEvaluator.shouldSkip(abd.getMetadata())) {
+		/**
+		 * 判断这个类是否需要跳过解析
+		 * 通过代码可以知道spring判断是否跳过解析，主要判断类有没有加注解
+		 */
+
+		if (conditionEvaluator.shouldSkip(abd.getMetadata())) {
 			return;
 		}
 
 		abd.setInstanceSupplier(instanceSupplier);
-		ScopeMetadata scopeMetadata = this.scopeMetadataResolver.resolveScopeMetadata(abd);
+		// 得到类的作用域
+		ScopeMetadata scopeMetadata = scopeMetadataResolver.resolveScopeMetadata(abd);
+		// 把类的作用域添加到数据结构中
 		abd.setScope(scopeMetadata.getScopeName());
-		String beanName = (name != null ? name : this.beanNameGenerator.generateBeanName(abd, this.registry));
+		// 生成类的名字通过beanNameGenerator
+		String beanName = (name != null ? name : beanNameGenerator.generateBeanName(abd, registry));
 
+		/**
+		 * 处理类当中的通用注解
+		 * 分析源码可以知道他主要处理 Lazy DependsOn Primary Role 等等注解
+		 * 处理完成之后processCommonDefinitionAnnotations中依然是把它添加到数据结构中
+		 */
 		AnnotationConfigUtils.processCommonDefinitionAnnotations(abd);
+		/**
+		 * 如果再向容器注册注解bean定义时，使用了额外的限定符注解则解析
+		 * Qualifier和Primary主要涉及到spring的自动装配
+		 * byName和qualifiers这个变量是Annotation类型的数组，里面存不仅仅是Qualifier注解
+		 * 理论上里面存的是一切注解，所以可以看到下面的代码spring去循环了这个数组
+		 * 然后依次判断了注解当中是否包含了Primary,是否包含了Lazyd
+		 */
 		if (qualifiers != null) {
 			for (Class<? extends Annotation> qualifier : qualifiers) {
+				// 如果配置了@Primary注解，如果加了则作为首选
 				if (Primary.class == qualifier) {
 					abd.setPrimary(true);
 				}
+				// 懒加载，前面加过
 				else if (Lazy.class == qualifier) {
 					abd.setLazyInit(true);
 				}
 				else {
+					// 如果使用了除@Primary和@Lazy以为的其他注解，则为该Bean添加一个根据名字自动装配的限定
+					// 这里难以理解，后面会详细介绍
 					abd.addQualifier(new AutowireCandidateQualifier(qualifier));
 				}
 			}
@@ -242,11 +265,21 @@ public class AnnotatedBeanDefinitionReader {
 			customizer.customize(abd);
 		}
 
+		// BeanDefinitionHolder 也是一个数据结构
 		BeanDefinitionHolder definitionHolder = new BeanDefinitionHolder(abd, beanName);
-		definitionHolder = AnnotationConfigUtils.applyScopedProxyMode(scopeMetadata, definitionHolder, this.registry);
-		BeanDefinitionReaderUtils.registerBeanDefinition(definitionHolder, this.registry);
+		/**
+		 * ScopedProxyMode 这个知识点比较复杂，需要结合web去理解
+		 * 暂时可以放一下，等说到springmvc的时候再说
+		 */
+		definitionHolder = AnnotationConfigUtils.applyScopedProxyMode(scopeMetadata, definitionHolder, registry);
+		/**
+		 * 把上述的这个数据结构注册给registry
+		 * registry就是AnnotatonConfigApplicationContext，在初始化的时候通过调用父类的构造方法
+		 * 实例化一个DefaultListableBeanFactory
+		 * registerBeanDefinition里面就是把definitionHolder这个数据结构包含的信息注册到DefaultListableBeanFactory这个工厂
+		 */
+		BeanDefinitionReaderUtils.registerBeanDefinition(definitionHolder, registry);
 	}
-
 
 	/**
 	 * Get the Environment from the given registry if possible, otherwise return a new

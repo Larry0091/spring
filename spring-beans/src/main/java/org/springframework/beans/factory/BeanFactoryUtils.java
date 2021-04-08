@@ -33,12 +33,10 @@ import org.springframework.util.StringUtils;
 /**
  * Convenience methods operating on bean factories, in particular
  * on the {@link ListableBeanFactory} interface.
- *
  * <p>Returns bean counts, bean names or bean instances,
  * taking into account the nesting hierarchy of a bean factory
  * (which the methods defined on the ListableBeanFactory interface don't,
  * in contrast to the methods defined on the BeanFactory interface).
- *
  * @author Rod Johnson
  * @author Juergen Hoeller
  * @author Chris Beams
@@ -54,11 +52,10 @@ public abstract class BeanFactoryUtils {
 
 	/**
 	 * Cache from name with factory bean prefix to stripped name without dereference.
-	 * @since 5.1
 	 * @see BeanFactory#FACTORY_BEAN_PREFIX
+	 * @since 5.1
 	 */
 	private static final Map<String, String> transformedBeanNameCache = new ConcurrentHashMap<>();
-
 
 	/**
 	 * Return whether the given name is a factory dereference
@@ -77,6 +74,11 @@ public abstract class BeanFactoryUtils {
 	 * @param name the name of the bean
 	 * @return the transformed name
 	 * @see BeanFactory#FACTORY_BEAN_PREFIX
+	 */
+	/**
+	 * 首先判断是不是有&前缀，没有就直接返回，说明不是FactoryBean的名字，否则就从缓存里获取，然后把前缀&去掉返回。
+	 * @param name
+	 * @return
 	 */
 	public static String transformedBeanName(String name) {
 		Assert.notNull(name, "'name' must not be null");
@@ -118,7 +120,6 @@ public abstract class BeanFactoryUtils {
 		return (separatorIndex != -1 ? name.substring(0, separatorIndex) : name);
 	}
 
-
 	// Retrieval of bean names
 
 	/**
@@ -155,8 +156,8 @@ public abstract class BeanFactoryUtils {
 	 * @param lbf the bean factory
 	 * @param type the type that beans must match (as a {@code ResolvableType})
 	 * @return the array of matching bean names, or an empty array if none
-	 * @since 4.2
 	 * @see ListableBeanFactory#getBeanNamesForType(ResolvableType)
+	 * @since 4.2
 	 */
 	public static String[] beanNamesForTypeIncludingAncestors(ListableBeanFactory lbf, ResolvableType type) {
 		Assert.notNull(lbf, "ListableBeanFactory must not be null");
@@ -220,8 +221,8 @@ public abstract class BeanFactoryUtils {
 	 * @return the array of matching bean names, or an empty array if none
 	 * @see ListableBeanFactory#getBeanNamesForType(Class, boolean, boolean)
 	 */
-	public static String[] beanNamesForTypeIncludingAncestors(
-			ListableBeanFactory lbf, Class<?> type, boolean includeNonSingletons, boolean allowEagerInit) {
+	public static String[] beanNamesForTypeIncludingAncestors(ListableBeanFactory lbf, Class<?> type,
+			boolean includeNonSingletons, boolean allowEagerInit) {
 
 		Assert.notNull(lbf, "ListableBeanFactory must not be null");
 		String[] result = lbf.getBeanNamesForType(type, includeNonSingletons, allowEagerInit);
@@ -243,11 +244,11 @@ public abstract class BeanFactoryUtils {
 	 * @param lbf the bean factory
 	 * @param annotationType the type of annotation to look for
 	 * @return the array of matching bean names, or an empty array if none
-	 * @since 5.0
 	 * @see ListableBeanFactory#getBeanNamesForAnnotation(Class)
+	 * @since 5.0
 	 */
-	public static String[] beanNamesForAnnotationIncludingAncestors(
-			ListableBeanFactory lbf, Class<? extends Annotation> annotationType) {
+	public static String[] beanNamesForAnnotationIncludingAncestors(ListableBeanFactory lbf,
+			Class<? extends Annotation> annotationType) {
 
 		Assert.notNull(lbf, "ListableBeanFactory must not be null");
 		String[] result = lbf.getBeanNamesForAnnotation(annotationType);
@@ -261,7 +262,6 @@ public abstract class BeanFactoryUtils {
 		}
 		return result;
 	}
-
 
 	// Retrieval of bean instances
 
@@ -331,9 +331,8 @@ public abstract class BeanFactoryUtils {
 	 * @throws BeansException if a bean could not be created
 	 * @see ListableBeanFactory#getBeansOfType(Class, boolean, boolean)
 	 */
-	public static <T> Map<String, T> beansOfTypeIncludingAncestors(
-			ListableBeanFactory lbf, Class<T> type, boolean includeNonSingletons, boolean allowEagerInit)
-			throws BeansException {
+	public static <T> Map<String, T> beansOfTypeIncludingAncestors(ListableBeanFactory lbf, Class<T> type,
+			boolean includeNonSingletons, boolean allowEagerInit) throws BeansException {
 
 		Assert.notNull(lbf, "ListableBeanFactory must not be null");
 		Map<String, T> result = new LinkedHashMap<>(4);
@@ -376,8 +375,7 @@ public abstract class BeanFactoryUtils {
 	 * @throws BeansException if the bean could not be created
 	 * @see #beansOfTypeIncludingAncestors(ListableBeanFactory, Class)
 	 */
-	public static <T> T beanOfTypeIncludingAncestors(ListableBeanFactory lbf, Class<T> type)
-			throws BeansException {
+	public static <T> T beanOfTypeIncludingAncestors(ListableBeanFactory lbf, Class<T> type) throws BeansException {
 
 		Map<String, T> beansOfType = beansOfTypeIncludingAncestors(lbf, type);
 		return uniqueBean(type, beansOfType);
@@ -413,9 +411,8 @@ public abstract class BeanFactoryUtils {
 	 * @throws BeansException if the bean could not be created
 	 * @see #beansOfTypeIncludingAncestors(ListableBeanFactory, Class, boolean, boolean)
 	 */
-	public static <T> T beanOfTypeIncludingAncestors(
-			ListableBeanFactory lbf, Class<T> type, boolean includeNonSingletons, boolean allowEagerInit)
-			throws BeansException {
+	public static <T> T beanOfTypeIncludingAncestors(ListableBeanFactory lbf, Class<T> type,
+			boolean includeNonSingletons, boolean allowEagerInit) throws BeansException {
 
 		Map<String, T> beansOfType = beansOfTypeIncludingAncestors(lbf, type, includeNonSingletons, allowEagerInit);
 		return uniqueBean(type, beansOfType);
@@ -469,15 +466,13 @@ public abstract class BeanFactoryUtils {
 	 * @throws BeansException if the bean could not be created
 	 * @see ListableBeanFactory#getBeansOfType(Class, boolean, boolean)
 	 */
-	public static <T> T beanOfType(
-			ListableBeanFactory lbf, Class<T> type, boolean includeNonSingletons, boolean allowEagerInit)
-			throws BeansException {
+	public static <T> T beanOfType(ListableBeanFactory lbf, Class<T> type, boolean includeNonSingletons,
+			boolean allowEagerInit) throws BeansException {
 
 		Assert.notNull(lbf, "ListableBeanFactory must not be null");
 		Map<String, T> beansOfType = lbf.getBeansOfType(type, includeNonSingletons, allowEagerInit);
 		return uniqueBean(type, beansOfType);
 	}
-
 
 	/**
 	 * Merge the given bean names result with the given parent result.
