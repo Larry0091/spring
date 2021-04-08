@@ -1,4 +1,4 @@
-package org.springframework.xiaosa.testBean;
+package com.xiaosa.entity;
 
 import javax.annotation.PostConstruct;
 
@@ -8,7 +8,7 @@ import org.springframework.context.ApplicationContextAware;
 import org.springframework.stereotype.Component;
 
 /**
- * @author haituchen
+ * @author yongcezhang
  * @date 2021/4/5 18:32
  */
 @Component

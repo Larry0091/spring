@@ -1,10 +1,10 @@
-package org.springframework.xiaosa.testBean;
+package com.xiaosa.config;
 
 import org.springframework.beans.factory.annotation.Configurable;
 import org.springframework.context.annotation.ComponentScan;
 
 /**
- * @author haituchen
+ * @author yongcezhang
  * @date 2021/4/5 18:33
  */
 @Configurable
