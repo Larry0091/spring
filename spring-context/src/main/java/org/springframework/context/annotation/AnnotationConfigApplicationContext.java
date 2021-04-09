@@ -93,6 +93,21 @@ public class AnnotationConfigApplicationContext extends GenericApplicationContex
 		//FIXME 调用构造方法
 		// 先调父类构造方法，然后再调用自身
 		// 在构造方法中初始一个读取器和扫描器
+		/**
+		 * this干的活:实例bean工厂,bd的读取器reader,bd的扫描器scanner（不重要）,注册了5个rootBD
+		 * org.springframework.context.annotation.internalConfigurationAnnotationProcessor
+		 * org.springframework.context.annotation.internalAutowiredAnnotationProcessor
+		 * org.springframework.context.annotation.internalCommonAnnotationProcessor
+		 * org.springframework.context.event.internalEventListenerProcessor
+		 * org.springframework.context.event.internalEventListenerFactory
+		 */
+		/**
+		 * 前两行作用：
+		 * 实例bean工厂
+		 * scaner，reader
+		 * 注册spring5个rootBD
+		 * 注册我们写的配置类或者普通类
+		 */
 		this();
 		//设置是否允许循环依赖
 //		setAllowCircularReferences(false);
@@ -167,6 +182,7 @@ public class AnnotationConfigApplicationContext extends GenericApplicationContex
 	@Override
 	public void register(Class<?>... componentClasses) {
 		Assert.notEmpty(componentClasses, "At least one component class must be specified");
+		// reader是第一行代码this创建的，利用bd读取器去注册配置类和普通类
 		reader.register(componentClasses);
 	}
 

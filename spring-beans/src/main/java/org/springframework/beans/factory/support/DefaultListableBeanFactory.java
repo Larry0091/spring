@@ -961,7 +961,10 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 			}
 			else {
 				// Still in startup registration phase
+				//还在启动注册阶段
+				//bd的map
 				beanDefinitionMap.put(beanName, beanDefinition);
+				//beanName的集合
 				beanDefinitionNames.add(beanName);
 				removeManualSingletonName(beanName);
 			}

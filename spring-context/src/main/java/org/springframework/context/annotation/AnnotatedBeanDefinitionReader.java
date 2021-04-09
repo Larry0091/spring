@@ -81,6 +81,7 @@ public class AnnotatedBeanDefinitionReader {
 		Assert.notNull(registry, "BeanDefinitionRegistry must not be null");
 		Assert.notNull(environment, "Environment must not be null");
 		this.registry = registry;
+		//condition评估会用到
 		conditionEvaluator = new ConditionEvaluator(registry, environment, null);
 		AnnotationConfigUtils.registerAnnotationConfigProcessors(this.registry);
 	}
@@ -217,6 +218,7 @@ public class AnnotatedBeanDefinitionReader {
 		/**
 		 * 判断这个类是否需要跳过解析
 		 * 通过代码可以知道spring判断是否跳过解析，主要判断类有没有加注解
+		 * condition的判断，如果不满足condition，那么这个bean不会被注册
 		 */
 
 		if (conditionEvaluator.shouldSkip(abd.getMetadata())) {
@@ -226,7 +228,7 @@ public class AnnotatedBeanDefinitionReader {
 		abd.setInstanceSupplier(instanceSupplier);
 		// 得到类的作用域
 		ScopeMetadata scopeMetadata = scopeMetadataResolver.resolveScopeMetadata(abd);
-		// 把类的作用域添加到数据结构中
+		// 把类的作用域添加到数据结构中  /设置单例，多例
 		abd.setScope(scopeMetadata.getScopeName());
 		// 生成类的名字通过beanNameGenerator
 		String beanName = (name != null ? name : beanNameGenerator.generateBeanName(abd, registry));
@@ -236,6 +238,7 @@ public class AnnotatedBeanDefinitionReader {
 		 * 分析源码可以知道他主要处理 Lazy DependsOn Primary Role 等等注解
 		 * 处理完成之后processCommonDefinitionAnnotations中依然是把它添加到数据结构中
 		 */
+		//处理公共的注解Lazy，Primary，DependsOn，Role
 		AnnotationConfigUtils.processCommonDefinitionAnnotations(abd);
 		/**
 		 * 如果再向容器注册注解bean定义时，使用了额外的限定符注解则解析
