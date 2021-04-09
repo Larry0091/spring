@@ -261,7 +261,7 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 				if (logger.isDebugEnabled()) {
 					logger.debug("Creating shared instance of singleton bean '" + beanName + "'");
 				}
-				//将beanName添加到singletonsCurrentlyInCreation集合中，表明正在创建该Bean
+				// FIXME 将beanName添加到singletonsCurrentlyInCreation集合中，表明正在创建该Bean
 				beforeSingletonCreation(beanName);
 				boolean newSingleton = false;
 				boolean recordSuppressedExceptions = (suppressedExceptions == null);
@@ -269,7 +269,10 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 					suppressedExceptions = new LinkedHashSet<>();
 				}
 				try {
-					//通过getObject()方法获取通过createBean()方法创建的bean
+					// 通过getObject()方法获取通过createBean()方法创建的bean
+					// 这里的singletonFactory.getObject()才是真正的去创建
+					// 创建对象 但是创建出来就是代理对象；直接创建代理对象----不现实
+					// 先创建原对象 ----创建代理对象
 					singletonObject = singletonFactory.getObject();
 					newSingleton = true;
 				} catch (IllegalStateException ex) {
